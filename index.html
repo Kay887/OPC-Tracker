@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberNeurix OPC — Registration Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --surface: #0c1520;
+    --surface2: #111e2d;
+    --border: #1a2f45;
+    --accent: #00c8ff;
+    --accent2: #00ff9d;
+    --accent3: #ff6b35;
+    --warn: #f5a623;
+    --text: #e2eaf4;
+    --muted: #5a7a95;
+    --done: #00ff9d;
+    --pending: #00c8ff;
+    --locked: #2a3f55;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .header-left {}
+  .logo-line {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: var(--font-head);
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .header h1 span { color: var(--accent); }
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+  .header-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .progress-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .progress-circle {
+    position: relative;
+    width: 72px;
+    height: 72px;
+  }
+  .progress-circle svg { transform: rotate(-90deg); }
+  .progress-circle circle {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+  .progress-circle .track { stroke: var(--surface2); }
+  .progress-circle .fill {
+    stroke: var(--accent2);
+    stroke-dasharray: 188;
+    stroke-dashoffset: 188;
+    transition: stroke-dashoffset 0.8s ease;
+  }
+  .progress-pct {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .progress-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Tab Nav */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    color: var(--muted);
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Tab Content */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Phase Cards */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .phase:hover { border-color: #254060; }
+  .phase.done { border-left: 3px solid var(--done); }
+  .phase.active-phase { border-left: 3px solid var(--pending); }
+  .phase.locked-phase { border-left: 3px solid var(--locked); opacity: 0.7; }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .phase-badge {
+    font-family: var(--font-head);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .phase.done .phase-badge { background: rgba(0,255,157,0.12); color: var(--done); }
+  .phase.active-phase .phase-badge { background: rgba(0,200,255,0.12); color: var(--pending); }
+  .phase.locked-phase .phase-badge { background: rgba(42,63,85,0.5); color: var(--muted); }
+
+  .phase-title {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    flex: 1;
+    color: #fff;
+  }
+  .phase-title small {
+    display: block;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+  }
+  .phase-progress-mini {
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+  }
+  .phase-chevron {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+  .phase.open .phase-chevron { transform: rotate(90deg); }
+
+  .phase-progress-bar {
+    height: 3px;
+    background: var(--border);
+    margin: 0 20px;
+  }
+  .phase-progress-fill {
+    height: 100%;
+    background: var(--accent2);
+    transition: width 0.5s ease;
+    border-radius: 2px;
+  }
+  .phase.locked-phase .phase-progress-fill { background: var(--muted); }
+
+  .phase-body {
+    display: none;
+    padding: 16px 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .phase.open .phase-body { display: block; }
+
+  /* Step items */
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(26,47,69,0.5);
+    animation: fadeIn 0.2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .step-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    margin-top: 2px;
+    font-size: 11px;
+  }
+  .step-check:hover { border-color: var(--accent); }
+  .step.checked .step-check {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: var(--bg);
+  }
+
+  .step-content { flex: 1; }
+  .step-name {
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font-head);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .step.checked .step-name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+  .step-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+  .step-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 5px;
+    text-transform: uppercase;
+  }
+  .tag-critical { background: rgba(255,107,53,0.15); color: var(--accent3); }
+  .tag-important { background: rgba(245,166,35,0.15); color: var(--warn); }
+  .tag-paid { background: rgba(0,200,255,0.1); color: var(--accent); }
+  .tag-mandatory { background: rgba(255,107,53,0.2); color: var(--accent3); border: 1px solid rgba(255,107,53,0.3); }
+
+  /* Timeline */
+  .timeline {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .tl-title {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .tl-rows { display: flex; flex-direction: column; gap: 10px; }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 14px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .tl-days {
+    color: var(--accent);
+    font-weight: 500;
+    font-family: var(--font-mono);
+  }
+  .tl-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tl-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .tl-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+  .tl-label { color: var(--text); font-size: 11px; white-space: nowrap; }
+
+  /* ─── COSTS TAB ─── */
+  .costs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .cost-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cost-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .cost-card.cat-setup::after { background: var(--accent); }
+  .cost-card.cat-govt::after { background: var(--warn); }
+  .cost-card.cat-pro::after { background: var(--accent3); }
+  .cost-card.cat-annual::after { background: var(--accent2); }
+
+  .cost-cat {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .cost-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .cost-amount {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .cost-card.cat-setup .cost-amount { color: var(--accent); }
+  .cost-card.cat-govt .cost-amount { color: var(--warn); }
+  .cost-card.cat-pro .cost-amount { color: var(--accent3); }
+  .cost-card.cat-annual .cost-amount { color: var(--accent2); }
+
+  .cost-note { font-size: 10px; color: var(--muted); line-height: 1.5; }
+
+  .cost-breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .cost-breakdown-header {
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(26,47,69,0.5);
+    font-size: 12px;
+  }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-row-label { color: var(--text); }
+  .cost-row-range {
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .cost-row-range.low { color: var(--accent2); }
+  .cost-row-range.mid { color: var(--warn); }
+  .cost-row-range.high { color: var(--accent3); }
+  .cost-row.total-row {
+    background: rgba(0,200,255,0.05);
+    border-top: 1px solid var(--accent);
+  }
+  .cost-row.total-row .cost-row-label {
+    font-family: var(--font-head);
+    font-weight: 700;
+    color: #fff;
+  }
+  .cost-row.total-row .cost-row-range {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .cost-visual {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .cv-title {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .cv-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+  .cv-label { color: var(--text); }
+  .cv-bar-wrap {
+    background: var(--border);
+    border-radius: 3px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .cv-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+  .cv-val {
+    font-family: var(--font-mono);
+    color: var(--muted);
+    text-align: right;
+    font-size: 11px;
+  }
+
+  /* Notice banner */
+  .notice {
+    background: rgba(245,166,35,0.07);
+    border: 1px solid rgba(245,166,35,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--warn);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .notice strong { color: var(--accent3); }
+
+  /* Reset button */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .reset-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+  }
+
+  /* responsive */
+  @media (max-width: 520px) {
+    .tabs { flex-direction: column; }
+    .cv-row { grid-template-columns: 120px 1fr 60px; }
+    .cost-row { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-line">CyberNeurix</div>
+      <h1>OPC <span>Registration</span><br>Tracker</h1>
+      <div class="subtitle">CyberNeurix Technologies (OPC) Private Limited · Karnataka</div>
+    </div>
+    <div class="header-right">
+      <div class="progress-ring-wrap">
+        <div class="progress-circle">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle class="track" cx="36" cy="36" r="30"/>
+            <circle class="fill" id="ringFill" cx="36" cy="36" r="30"/>
+          </svg>
+          <div class="progress-pct" id="ringPct">0%</div>
+        </div>
+        <div class="progress-label">COMPLETE</div>
+        <div id="syncStatus" style="font-size:10px; letter-spacing:1px; margin-top:4px; color:var(--muted); font-family:var(--font-mono);">◌ Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tracker')">▸ Tracker</button>
+    <button class="tab-btn" onclick="switchTab('costs')">₹ Costs</button>
+  </div>
+
+  <!-- TAB: TRACKER -->
+  <div class="tab-panel active" id="tab-tracker">
+
+    <!-- Timeline -->
+    <div class="timeline">
+      <div class="tl-title">Execution Timeline</div>
+      <div class="tl-rows">
+        <div class="tl-row"><span class="tl-days">Day 0–2</span><div class="tl-bar-wrap"><div class="tl-bar"><div class="tl-fill" style="width:30%"></div></div><span class="tl-label">Phase 0 · Prep</span></div></div>
+        <div class="tl-row"><span class="tl-days">Day 2–4</span><div class="tl-bar-wrap"><div class="tl-bar"><div class="tl-fill" style="width:20%"></div></div><span class="tl-label">Phase 1 · DSC</span></div></div>
+        <div class="tl-row"><span class="tl-days">Day 4–7</span><div class="tl-bar-wrap"><div class="tl-bar"><div class="tl-fill" style="width:30%"></div></div><span class="tl-label">Phase 2 · Name Reservation</span></div></div>
+        <div class="tl-row"><span class="tl-days">Day 7–14</span><div class="tl-bar-wrap"><div class="tl-bar"><div class="tl-fill" style="width:70%"></div></div><span class="tl-label">Phase 3 · Incorporation</span></div></div>
+        <div class="tl-row"><span class="tl-days">Day 14–20</span><div class="tl-bar-wrap"><div class="tl-bar"><div class="tl-fill" style="width:60%"></div></div><span class="tl-label">Phases 4–5 · Activation + Compliance</span></div></div>
+      </div>
+    </div>
+
+    <!-- PHASE 0 -->
+    <div class="phase active-phase" id="phase0">
+      <div class="phase-header" onclick="togglePhase('phase0')">
+        <span class="phase-badge">Phase 0</span>
+        <div class="phase-title">Pre-Validation Layer<small>Eliminate rejection risk before touching MCA</small></div>
+        <span class="phase-progress-mini" id="prog0">0/7</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill0" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="0" data-id="0-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Finalize company name variants (2–3)</div>
+            <div class="step-desc">CyberNeurix Technologies / Labs / Systems (OPC) Pvt Ltd</div>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">MCA company name search</div>
+            <div class="step-desc">Check existing registrations on mca.gov.in — avoid identical/phonetically similar names in same industry</div>
+            <span class="step-tag tag-critical">Critical</span>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Trademark search (CGPDTM)</div>
+            <div class="step-desc">Search via ipindiaonline.gov.in — check all three name variants</div>
+            <span class="step-tag tag-critical">Critical</span>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-3">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Finalize Nominee (Indian resident)</div>
+            <div class="step-desc">Confirm PAN + Aadhaar availability and willingness to sign INC-3</div>
+            <span class="step-tag tag-mandatory">Mandatory for OPC</span>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-4">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Digitize Director documents</div>
+            <div class="step-desc">PAN, Aadhaar, Passport photo, active email + mobile</div>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-5">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Digitize Nominee documents</div>
+            <div class="step-desc">PAN, Aadhaar, active email + mobile</div>
+          </div>
+        </div>
+        <div class="step" data-phase="0" data-id="0-6">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Collect Registered Office proofs</div>
+            <div class="step-desc">Rent agreement / ownership proof + utility bill (&lt;2 months old) + NOC from owner. Verify all address spellings match.</div>
+            <span class="step-tag tag-important">80% rejection prevention</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 1 -->
+    <div class="phase active-phase" id="phase1">
+      <div class="phase-header" onclick="togglePhase('phase1')">
+        <span class="phase-badge">Phase 1</span>
+        <div class="phase-title">Identity Layer — DSC Setup<small>Enable digital signing capability</small></div>
+        <span class="phase-progress-mini" id="prog1">0/3</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill1" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="1" data-id="1-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Choose DSC provider</div>
+            <div class="step-desc">eMudhra or Capricorn — both support Aadhaar eKYC flow</div>
+          </div>
+        </div>
+        <div class="step" data-phase="1" data-id="1-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Complete DSC application</div>
+            <div class="step-desc">Aadhaar eKYC + video verification</div>
+            <span class="step-tag tag-paid">₹1,000 – ₹1,500</span>
+          </div>
+        </div>
+        <div class="step" data-phase="1" data-id="1-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Download and test DSC token</div>
+            <div class="step-desc">Verify signing works before proceeding to MCA filings</div>
+            <span class="step-tag tag-critical">Verify before filing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase active-phase" id="phase2">
+      <div class="phase-header" onclick="togglePhase('phase2')">
+        <span class="phase-badge">Phase 2</span>
+        <div class="phase-title">Control Layer — Name Reservation<small>Secure company name via SPICe+ Part A</small></div>
+        <span class="phase-progress-mini" id="prog2">0/3</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill2" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="2" data-id="2-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Create MCA account</div>
+            <div class="step-desc">Register on mca.gov.in as a user</div>
+          </div>
+        </div>
+        <div class="step" data-phase="2" data-id="2-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">File SPICe+ Part A</div>
+            <div class="step-desc">Submit 2 name options. Business activity: Cybersecurity consulting, IT services, training and software development.</div>
+            <span class="step-tag tag-paid">₹1,000 fee</span>
+          </div>
+        </div>
+        <div class="step" data-phase="2" data-id="2-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Await name approval</div>
+            <div class="step-desc">MCA turnaround: 1–3 business days. Name reservation valid for 20 days.</div>
+            <span class="step-tag tag-important">20-day expiry — act fast</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase active-phase" id="phase3">
+      <div class="phase-header" onclick="togglePhase('phase3')">
+        <span class="phase-badge">Phase 3</span>
+        <div class="phase-title">Incorporation Execution Layer<small>Complete legal incorporation via SPICe+</small></div>
+        <span class="phase-progress-mini" id="prog3">0/8</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill3" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="3" data-id="3-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Fill SPICe+ Part B</div>
+            <div class="step-desc">Company type → OPC · Capital → ₹1L · Enter Director + Nominee details</div>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Prepare mandatory attachments</div>
+            <div class="step-desc">PAN + Aadhaar (Director + Nominee) · Address proof · NOC from property owner</div>
+            <span class="step-tag tag-mandatory">Do Not Skip</span>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Prepare DIR-2 (Director consent)</div>
+            <div class="step-desc">Director consent to act form — signed digitally</div>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-3">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Prepare INC-3 (Nominee consent)</div>
+            <div class="step-desc">Nominee's written consent — signed by nominee</div>
+            <span class="step-tag tag-mandatory">OPC Critical</span>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-4">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Draft MOA with specific objects</div>
+            <div class="step-desc">Include: Cybersecurity consulting · SIEM/IT services · Training & education · Software/tool development. Don't leave it vague.</div>
+            <span class="step-tag tag-important">Be Specific</span>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-5">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Complete AOA + AGILE-PRO form</div>
+            <div class="step-desc">Use default AOA template. AGILE-PRO handles GST/EPFO/ESIC registrations simultaneously.</div>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-6">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">DSC signing (Director + Nominee)</div>
+            <div class="step-desc">Both parties digitally sign all forms before submission</div>
+          </div>
+        </div>
+        <div class="step" data-phase="3" data-id="3-7">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">CA/CS certification + Submit + Pay</div>
+            <div class="step-desc">Even in DIY mode — professional certification is mandatory. Then submit and pay govt fees.</div>
+            <span class="step-tag tag-paid">₹1K–3K (CA) + ₹2K–5K (Govt + stamp duty)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase active-phase" id="phase4">
+      <div class="phase-header" onclick="togglePhase('phase4')">
+        <span class="phase-badge">Phase 4</span>
+        <div class="phase-title">Activation Layer<small>Turn entity into an operational business</small></div>
+        <span class="phase-progress-mini" id="prog4">0/10</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill4" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="4" data-id="4-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Download COI, PAN, TAN from MCA</div>
+            <div class="step-desc">Verify all details match your documents exactly</div>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">File INC-20A (Commencement of Business)</div>
+            <div class="step-desc">Declaration that every subscriber has paid up their share value. Must be filed within 180 days of incorporation — failure attracts ₹50,000 penalty + ₹1,000/day.</div>
+            <span class="step-tag tag-mandatory">180-day hard deadline</span>
+            <span class="step-tag tag-critical">₹50K penalty if missed</span>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Issue share certificate to yourself</div>
+            <div class="step-desc">Must be issued within 60 days of incorporation. Physical certificate signed, stamped, and retained on record.</div>
+            <span class="step-tag tag-mandatory">60-day deadline</span>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-3">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Open company bank account</div>
+            <div class="step-desc">ICICI / HDFC / Axis — bring COI, PAN, MOA/AOA and board resolution authorising account opening</div>
+            <span class="step-tag tag-important">Needed for operations</span>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-4">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Pass board resolution for bank account</div>
+            <div class="step-desc">Formal resolution authorising the bank account opening and signatory — bank will ask for this</div>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-5">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Appoint statutory auditor + file ADT-1</div>
+            <div class="step-desc">Appoint CA as auditor AND file ADT-1 on MCA portal — both required within 30 days of incorporation</div>
+            <span class="step-tag tag-mandatory">30-day deadline</span>
+            <span class="step-tag tag-paid">₹5K–₹15K/year</span>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-6">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Set up accounting software</div>
+            <div class="step-desc">Zoho Books or Tally — track invoices and expenses from Day 1</div>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-7">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Decide on GST registration</div>
+            <div class="step-desc">Register if: B2B clients, interstate services, or scaling revenue. Otherwise defer voluntarily.</div>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-8">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Register on Udyam (MSME)</div>
+            <div class="step-desc">Free registration at udyamregistration.gov.in — unlocks govt scheme eligibility, priority lending, and tender advantages. Takes ~10 minutes.</div>
+            <span class="step-tag tag-important">Free · Highly recommended</span>
+          </div>
+        </div>
+        <div class="step" data-phase="4" data-id="4-9">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Professional Tax registration (Karnataka)</div>
+            <div class="step-desc">Required if you draw a salary from the company. Register with Karnataka PT authority — enrolment + monthly/annual returns.</div>
+            <span class="step-tag tag-mandatory">Karnataka requirement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 5 -->
+    <div class="phase active-phase" id="phase5">
+      <div class="phase-header" onclick="togglePhase('phase5')">
+        <span class="phase-badge">Phase 5</span>
+        <div class="phase-title">Compliance Layer<small>Annual filings to keep entity alive</small></div>
+        <span class="phase-progress-mini" id="prog5">0/7</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill5" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="5" data-id="5-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">File AOC-4 (Annual Financial Statements)</div>
+            <div class="step-desc">Annual financial statements — due within 60 days of AGM (180 days from financial year end for OPC)</div>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">File MGT-7A (Annual Return — OPC)</div>
+            <div class="step-desc">OPCs file MGT-7A (simplified form), not MGT-7 — due within 60 days of AGM</div>
+            <span class="step-tag tag-important">OPC files MGT-7A not MGT-7</span>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">File ITR-6 (Income Tax Return)</div>
+            <div class="step-desc">Annual corporate income tax return — due 31 October (if audit required) or 31 July. Separate from MCA filings.</div>
+            <span class="step-tag tag-mandatory">Tax dept — separate from MCA</span>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-3">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">DIR-3 KYC (Director KYC — annual)</div>
+            <div class="step-desc">Every director must file DIR-3 KYC by 30 September each year. Missing it deactivates your DIN — ₹5,000 to reactivate.</div>
+            <span class="step-tag tag-mandatory">30 Sep deadline every year</span>
+            <span class="step-tag tag-critical">DIN deactivation if missed</span>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-4">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Advance tax payments (quarterly)</div>
+            <div class="step-desc">If projected tax liability exceeds ₹10,000/year — pay in 4 instalments: 15 Jun, 15 Sep, 15 Dec, 15 Mar. Interest penalty if missed.</div>
+            <span class="step-tag tag-important">Quarterly — check with CA</span>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-5">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">GST returns (if registered)</div>
+            <div class="step-desc">Monthly GSTR-1 + GSTR-3B, or quarterly if under QRMP scheme. Late fees + interest apply.</div>
+          </div>
+        </div>
+        <div class="step" data-phase="5" data-id="5-6">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Set compliance budget</div>
+            <div class="step-desc">Annual ongoing cost: ₹8,000–₹20,000 (CA fees + MCA + IT filing fees)</div>
+            <span class="step-tag tag-paid">₹8K–₹20K/year</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 6 -->
+    <div class="phase active-phase" id="phase6">
+      <div class="phase-header" onclick="togglePhase('phase6')">
+        <span class="phase-badge">Phase 6</span>
+        <div class="phase-title">Conversion Readiness<small>OPC → Pvt Ltd — voluntary or mandatory</small></div>
+        <span class="phase-progress-mini" id="prog6">0/4</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill6" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="6" data-id="6-0">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Understand mandatory conversion thresholds</div>
+            <div class="step-desc">Conversion to Pvt Ltd becomes COMPULSORY (not optional) when: paid-up capital exceeds ₹50L OR turnover exceeds ₹2Cr. Must convert within 6 months of crossing either threshold.</div>
+            <span class="step-tag tag-critical">Mandatory beyond thresholds</span>
+          </div>
+        </div>
+        <div class="step" data-phase="6" data-id="6-1">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Monitor voluntary conversion triggers</div>
+            <div class="step-desc">Consider early conversion when: serious clients arrive · co-founder needed · investor conversations start · credibility requirement</div>
+          </div>
+        </div>
+        <div class="step" data-phase="6" data-id="6-2">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Plan equity structure before conversion</div>
+            <div class="step-desc">Decide equity split, identify second shareholder + second director. Do this before filing — harder to restructure after.</div>
+          </div>
+        </div>
+        <div class="step" data-phase="6" data-id="6-3">
+          <div class="step-check" onclick="toggleStep(this)"></div>
+          <div class="step-content">
+            <div class="step-name">Initiate INC-6 conversion filing</div>
+            <div class="step-desc">File INC-6 on MCA with updated MOA/AOA. Company continues with same CIN — no fresh incorporation needed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+      <button class="reset-btn" onclick="resetAll()">↺ Reset All Progress</button>
+    </div>
+
+  </div><!-- end tracker tab -->
+
+  <!-- TAB: COSTS -->
+  <div class="tab-panel" id="tab-costs">
+
+    <div class="notice">
+      <strong>Note:</strong> All figures are estimates as of 2025. Government fees may vary. Karnataka stamp duty applies to this registration. Always confirm current rates on mca.gov.in before filing.
+    </div>
+
+    <!-- Summary cards -->
+    <div class="costs-grid">
+      <div class="cost-card cat-setup">
+        <div class="cost-cat">Setup · One-time</div>
+        <div class="cost-title">DSC Token</div>
+        <div class="cost-amount">₹1,000–1,500</div>
+        <div class="cost-note">eMudhra or Capricorn · Aadhaar eKYC process · Valid 2 years</div>
+      </div>
+      <div class="cost-card cat-govt">
+        <div class="cost-cat">Government · One-time</div>
+        <div class="cost-title">Name Reservation (SPICe+ A)</div>
+        <div class="cost-amount">₹1,000</div>
+        <div class="cost-note">Fixed MCA fee · Non-refundable · Valid 20 days after approval</div>
+      </div>
+      <div class="cost-card cat-pro">
+        <div class="cost-cat">Professional · One-time</div>
+        <div class="cost-title">CA/CS Certification</div>
+        <div class="cost-amount">₹1,000–3,000</div>
+        <div class="cost-note">Minimal engagement for mandatory certification only · Even in DIY mode</div>
+      </div>
+      <div class="cost-card cat-govt">
+        <div class="cost-cat">Government + Stamp · One-time</div>
+        <div class="cost-title">Incorporation Fees</div>
+        <div class="cost-amount">₹2,000–5,000</div>
+        <div class="cost-note">SPICe+ Part B govt fees + Karnataka stamp duty · Varies by authorized capital</div>
+      </div>
+      <div class="cost-card cat-annual">
+        <div class="cost-cat">Annual · Recurring</div>
+        <div class="cost-title">Statutory Auditor</div>
+        <div class="cost-amount">₹5,000–15,000</div>
+        <div class="cost-note">Must appoint within 30 days of incorporation · File ADT-1 · Required every year</div>
+      </div>
+      <div class="cost-card cat-annual">
+        <div class="cost-cat">Annual · Recurring</div>
+        <div class="cost-title">Ongoing Compliance</div>
+        <div class="cost-amount">₹8,000–20,000</div>
+        <div class="cost-note">AOC-4 + MGT-7 filings · CA fees + MCA portal charges · Per year</div>
+      </div>
+    </div>
+
+    <!-- Full breakdown table -->
+    <div class="cost-breakdown">
+      <div class="cost-breakdown-header">Complete Cost Breakdown</div>
+      <div class="cost-row"><span class="cost-row-label">DSC (Director)</span><span class="cost-row-range low">₹1,000 – ₹1,500</span></div>
+      <div class="cost-row"><span class="cost-row-label">SPICe+ Part A (Name Reservation)</span><span class="cost-row-range low">₹1,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">CA/CS Certification (Minimal)</span><span class="cost-row-range mid">₹1,000 – ₹3,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">SPICe+ Part B + Stamp Duty (KA)</span><span class="cost-row-range mid">₹2,000 – ₹5,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">Accounting Software (Zoho Books / Tally)</span><span class="cost-row-range mid">₹3,500 – ₹12,000 /yr</span></div>
+      <div class="cost-row"><span class="cost-row-label">Statutory Auditor (Year 1)</span><span class="cost-row-range mid">₹5,000 – ₹15,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">Annual Compliance (AOC-4 + MGT-7)</span><span class="cost-row-range high">₹8,000 – ₹20,000 /yr</span></div>
+      <div class="cost-row"><span class="cost-row-label">GST Registration (if opted)</span><span class="cost-row-range low">₹0 (self-file)</span></div>
+      <div class="cost-row total-row">
+        <span class="cost-row-label">Total Incorporation (One-time)</span>
+        <span class="cost-row-range">₹5,000 – ₹10,500</span>
+      </div>
+      <div class="cost-row total-row" style="border-top: none;">
+        <span class="cost-row-label">Year 1 Total (incl. annual costs)</span>
+        <span class="cost-row-range">≈ ₹21,500 – ₹52,500</span>
+      </div>
+    </div>
+
+    <!-- Visual bars -->
+    <div class="cost-visual">
+      <div class="cv-title">Cost Weight Distribution (Year 1 Midpoint)</div>
+      <div class="cv-row">
+        <span class="cv-label">Ongoing Compliance</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:80%; background: var(--accent2);"></div></div>
+        <span class="cv-val">₹14K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">Statutory Auditor</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:57%; background: var(--accent2);"></div></div>
+        <span class="cv-val">₹10K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">Accounting Software</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:44%; background: var(--accent);"></div></div>
+        <span class="cv-val">₹7.7K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">Incorporation Fees</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:20%; background: var(--warn);"></div></div>
+        <span class="cv-val">₹3.5K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">CA/CS Certification</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:11%; background: var(--accent3);"></div></div>
+        <span class="cv-val">₹2K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">DSC Token</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:7%; background: var(--accent3);"></div></div>
+        <span class="cv-val">₹1.25K avg</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-label">Name Reservation</span>
+        <div class="cv-bar-wrap"><div class="cv-fill" style="width:6%; background: var(--warn);"></div></div>
+        <span class="cv-val">₹1K</span>
+      </div>
+    </div>
+
+  </div><!-- end costs tab -->
+
+</div><!-- end shell -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ─── Supabase ───
+  const SUPABASE_URL = 'https://veovscvlsegoiuphvgwu.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlb3ZzY3Zsc2Vnb2l1cGh2Z3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTM2OTEsImV4cCI6MjA5MDAyOTY5MX0.xWg1HjwUs_FC285cYpA8VcCeqSqFKLn1j_2llnm9Zrk';
+  const TRACKER_ID = 'cnx_opc_v1';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ─── State ───
+  const phaseCounts = { 0:7, 1:3, 2:3, 3:8, 4:10, 5:7, 6:4 };
+  let checkedState = {};
+  let saveTimer = null;
+
+  // ─── Sync indicator ───
+  function setSyncStatus(status) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    const map = {
+      saving:  { text: '● Saving…',  color: 'var(--warn)' },
+      saved:   { text: '✓ Synced',   color: 'var(--accent2)' },
+      error:   { text: '✕ Not Synced',  color: 'var(--accent3)' },
+      loading: { text: '◌ Loading…', color: 'var(--muted)' },
+    };
+    const s = map[status] || map.saved;
+    el.textContent = s.text;
+    el.style.color = s.color;
+  }
+
+  // ─── Load from Supabase ───
+  async function loadState() {
+    setSyncStatus('loading');
+    try {
+      const { data, error } = await sb
+        .from('opc_tracker')
+        .select('checked_state')
+        .eq('tracker_id', TRACKER_ID)
+        .single();
+      if (data && data.checked_state) {
+        checkedState = data.checked_state;
+      }
+      setSyncStatus('saved');
+    } catch(e) {
+      // Table may not exist yet — fall back to localStorage
+      try {
+        const saved = localStorage.getItem(TRACKER_ID);
+        if (saved) checkedState = JSON.parse(saved);
+      } catch(_) {}
+      setSyncStatus('error');
+    }
+    applyState();
+  }
+
+  // ─── Save to Supabase (debounced) ───
+  function saveState() {
+    // Optimistic local backup
+    try { localStorage.setItem(TRACKER_ID, JSON.stringify(checkedState)); } catch(_) {}
+    clearTimeout(saveTimer);
+    setSyncStatus('saving');
+    saveTimer = setTimeout(async () => {
+      try {
+        const { error } = await sb
+          .from('opc_tracker')
+          .upsert({ tracker_id: TRACKER_ID, checked_state: checkedState, updated_at: new Date().toISOString() },
+                  { onConflict: 'tracker_id' });
+        setSyncStatus(error ? 'error' : 'saved');
+      } catch(e) {
+        setSyncStatus('error');
+      }
+    }, 600);
+  }
+
+  function applyState() {
+    document.querySelectorAll('.step').forEach(step => {
+      const id = step.dataset.id;
+      if (checkedState[id]) {
+        step.classList.add('checked');
+        step.querySelector('.step-check').textContent = '✓';
+      } else {
+        step.classList.remove('checked');
+        step.querySelector('.step-check').textContent = '';
+      }
+    });
+    updateAllProgress();
+  }
+
+  function toggleStep(el) {
+    const step = el.closest('.step');
+    const id = step.dataset.id;
+    const isChecked = step.classList.toggle('checked');
+    el.textContent = isChecked ? '✓' : '';
+    checkedState[id] = isChecked;
+    saveState();
+    updateAllProgress();
+  }
+
+  function updateAllProgress() {
+    let totalDone = 0, totalAll = 0;
+    for (let p = 0; p <= 6; p++) {
+      const total = phaseCounts[p];
+      const done = document.querySelectorAll(`[data-phase="${p}"].checked`).length;
+      totalDone += done;
+      totalAll += total;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      const fillEl = document.getElementById(`fill${p}`);
+      const progEl = document.getElementById(`prog${p}`);
+      if (fillEl) fillEl.style.width = pct + '%';
+      if (progEl) progEl.textContent = `${done}/${total}`;
+      const phaseEl = document.getElementById(`phase${p}`);
+      if (phaseEl) {
+        phaseEl.classList.remove('done', 'active-phase', 'locked-phase');
+        if (done === total) phaseEl.classList.add('done');
+        else phaseEl.classList.add('active-phase');
+      }
+    }
+    const globalPct = totalAll > 0 ? Math.round((totalDone / totalAll) * 100) : 0;
+    document.getElementById('ringPct').textContent = globalPct + '%';
+    const circumference = 188;
+    const offset = circumference - (circumference * globalPct / 100);
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+  }
+
+  function togglePhase(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  async function resetAll() {
+    if (!confirm('Reset all progress?')) return;
+    checkedState = {};
+    applyState();
+    saveState();
+  }
+
+  // ─── Init ───
+  loadState();
+
+  setTimeout(() => {
+    document.getElementById('ringFill').style.transition = 'stroke-dashoffset 1.2s ease';
+    updateAllProgress();
+  }, 300);
+</script>
+</body>
+</html>
