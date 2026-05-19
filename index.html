@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberNeurix — Legal & IP Command Centre</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050a0f;
+    --surface: #0c1520;
+    --surface2: #111e2d;
+    --border: #1a2f45;
+    --accent: #00c8ff;
+    --accent2: #00ff9d;
+    --accent3: #ff6b35;
+    --warn: #f5a623;
+    --purple: #a78bfa;
+    --text: #e2eaf4;
+    --muted: #5a7a95;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .logo-line {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: var(--font-head);
+    font-size: clamp(20px, 3.5vw, 30px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .header h1 span { color: var(--accent); }
+  .subtitle { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
+  .header-right { display: flex; gap: 12px; align-items: flex-start; flex-shrink: 0; flex-wrap: wrap; }
+
+  .stat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    gap: 4px;
+    min-width: 68px;
+  }
+  .stat-pill-val { font-family: var(--font-head); font-size: 20px; font-weight: 800; }
+  .stat-pill-val.opc { color: var(--accent); }
+  .stat-pill-val.tm { color: var(--accent2); }
+  .stat-pill-val.prop { color: var(--purple); }
+  .stat-pill-label { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; text-align: center; }
+  #syncStatus { font-size: 10px; letter-spacing: 1px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; text-align: right; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    color: var(--muted);
+    font-family: var(--font-head);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: var(--bg); }
+  .tab-btn.active.tm-tab { background: var(--accent2); }
+  .tab-btn.active.prop-tab { background: var(--purple); color: #fff; }
+  .tab-btn.active.costs-tab { background: var(--warn); color: var(--bg); }
+
+  /* ── PANELS ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-label {
+    font-family: var(--font-head);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── PHASE CARDS ── */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .phase:hover { border-color: #254060; }
+  .phase.done { border-left: 3px solid var(--accent2); }
+  .phase.active-phase { border-left: 3px solid var(--accent); }
+  .phase.tm-phase { border-left: 3px solid var(--accent2); }
+  .phase.prop-phase { border-left: 3px solid var(--purple); }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .phase-badge {
+    font-family: var(--font-head);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .active-phase .phase-badge { background: rgba(0,200,255,0.12); color: var(--accent); }
+  .phase.done .phase-badge { background: rgba(0,255,157,0.12); color: var(--accent2); }
+  .tm-phase .phase-badge { background: rgba(0,255,157,0.1); color: var(--accent2); }
+  .prop-phase .phase-badge { background: rgba(167,139,250,0.12); color: var(--purple); }
+
+  .phase-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; flex: 1; color: #fff; }
+  .phase-title small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); letter-spacing: 0.5px; }
+  .phase-progress-mini { font-size: 11px; color: var(--muted); flex-shrink: 0; font-family: var(--font-mono); }
+  .phase-chevron { color: var(--muted); font-size: 11px; transition: transform 0.25s; flex-shrink: 0; }
+  .phase.open .phase-chevron { transform: rotate(90deg); }
+
+  .phase-progress-bar { height: 2px; background: var(--border); margin: 0 18px; }
+  .phase-progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+  .active-phase .phase-progress-fill, .phase.done .phase-progress-fill { background: var(--accent2); }
+  .tm-phase .phase-progress-fill { background: var(--accent2); }
+  .prop-phase .phase-progress-fill { background: var(--purple); }
+
+  .phase-body { display: none; padding: 14px 18px 18px; border-top: 1px solid var(--border); }
+  .phase.open .phase-body { display: block; }
+
+  /* ── STEPS ── */
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(26,47,69,0.5);
+    animation: fadeIn 0.2s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; } }
+
+  .step-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  .step-check:hover { border-color: var(--accent); }
+  .step.checked .step-check { background: var(--accent2); border-color: var(--accent2); color: var(--bg); }
+  .prop-phase .step.checked .step-check { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  .step-content { flex: 1; }
+  .step-name { font-size: 13px; color: var(--text); font-family: var(--font-head); font-weight: 600; line-height: 1.4; }
+  .step.checked .step-name { text-decoration: line-through; color: var(--muted); }
+  .step-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.6; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .step-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .tag-critical { background: rgba(255,107,53,0.15); color: var(--accent3); }
+  .tag-important { background: rgba(245,166,35,0.15); color: var(--warn); }
+  .tag-paid { background: rgba(0,200,255,0.1); color: var(--accent); }
+  .tag-mandatory { background: rgba(255,107,53,0.2); color: var(--accent3); border: 1px solid rgba(255,107,53,0.3); }
+  .tag-tm { background: rgba(0,255,157,0.1); color: var(--accent2); }
+  .tag-prop { background: rgba(167,139,250,0.12); color: var(--purple); }
+  .tag-free { background: rgba(0,255,157,0.08); color: var(--accent2); border: 1px solid rgba(0,255,157,0.2); }
+  .tag-doc { background: rgba(0,200,255,0.08); color: var(--accent); border: 1px solid rgba(0,200,255,0.2); }
+
+  /* ── DOC LIST ── */
+  .doc-list {
+    background: rgba(0,200,255,0.04);
+    border: 1px solid rgba(0,200,255,0.15);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 8px;
+  }
+  .doc-list-title {
+    font-family: var(--font-head);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .doc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .doc-item::before { content: '◦'; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+  .doc-item strong { color: var(--text); font-family: var(--font-head); font-weight: 600; }
+
+  .prop-doc-list {
+    background: rgba(167,139,250,0.04);
+    border: 1px solid rgba(167,139,250,0.15);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 8px;
+  }
+  .prop-doc-list .doc-list-title { color: var(--purple); }
+  .prop-doc-list .doc-item::before { color: var(--purple); }
+
+  /* ── TM GRID ── */
+  .tm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  /* ── TM CARD — rebuilt for reliable toggle ── */
+  .tm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    border-left: 3px solid var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .tm-card:hover { border-color: #254060; border-left-color: var(--accent2); }
+  .tm-card.tm-pending { border-left-color: var(--warn); background: rgba(245,166,35,0.04); }
+  .tm-card.tm-filed { border-left-color: var(--accent2); background: rgba(0,255,157,0.04); }
+  .tm-card.tm-registered { border-left-color: var(--accent2); background: rgba(0,255,157,0.08); border-color: rgba(0,255,157,0.25); }
+
+  .tm-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+  .tm-card-name { font-family: var(--font-head); font-size: 15px; font-weight: 800; color: #fff; }
+  .tm-cycle-btn {
+    background: var(--border);
+    border: none;
+    color: var(--muted);
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .tm-cycle-btn:hover { background: rgba(0,200,255,0.2); color: var(--accent); }
+  .tm-card-type { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .tm-card-class { font-size: 10px; color: var(--accent); font-family: var(--font-mono); margin-bottom: 8px; }
+  .tm-card-fee { font-size: 9px; color: var(--muted); margin-bottom: 8px; }
+  .tm-card-status {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .tm-status-todo { background: rgba(90,122,149,0.2); color: var(--muted); }
+  .tm-status-pending { background: rgba(245,166,35,0.15); color: var(--warn); }
+  .tm-status-filed { background: rgba(0,255,157,0.12); color: var(--accent2); }
+  .tm-status-registered { background: rgba(0,255,157,0.25); color: var(--accent2); border: 1px solid rgba(0,255,157,0.4); }
+
+  /* ── TM DETAIL PANEL ── */
+  .tm-detail {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .tm-detail.open { display: block; }
+  .tm-detail-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .tm-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tm-detail-item { font-size: 11px; }
+  .tm-detail-item label { color: var(--muted); letter-spacing: 1px; display: block; margin-bottom: 3px; font-size: 9px; text-transform: uppercase; }
+  .tm-detail-item span { color: var(--text); }
+
+  /* ── NOTICE ── */
+  .notice {
+    background: rgba(245,166,35,0.07);
+    border: 1px solid rgba(245,166,35,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: var(--warn);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .notice strong { color: var(--accent3); }
+  .notice.info {
+    background: rgba(0,200,255,0.05);
+    border-color: rgba(0,200,255,0.2);
+    color: var(--accent);
+  }
+  .notice.info strong { color: #fff; }
+  .notice.prop-notice {
+    background: rgba(167,139,250,0.05);
+    border-color: rgba(167,139,250,0.2);
+    color: var(--purple);
+  }
+  .notice.prop-notice strong { color: #fff; }
+
+  /* ── COSTS ── */
+  .costs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .cost-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cost-card::after { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; }
+  .cost-card.cat-setup::after { background: var(--accent); }
+  .cost-card.cat-govt::after { background: var(--warn); }
+  .cost-card.cat-pro::after { background: var(--accent3); }
+  .cost-card.cat-annual::after { background: var(--accent2); }
+  .cost-card.cat-tm::after { background: var(--accent2); }
+  .cost-card.cat-prop::after { background: var(--purple); }
+  .cost-cat { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .cost-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .cost-amount { font-family: var(--font-head); font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .cost-card.cat-setup .cost-amount { color: var(--accent); }
+  .cost-card.cat-govt .cost-amount { color: var(--warn); }
+  .cost-card.cat-pro .cost-amount { color: var(--accent3); }
+  .cost-card.cat-annual .cost-amount { color: var(--accent2); }
+  .cost-card.cat-tm .cost-amount { color: var(--accent2); }
+  .cost-card.cat-prop .cost-amount { color: var(--purple); }
+  .cost-note { font-size: 10px; color: var(--muted); line-height: 1.5; }
+
+  .cost-breakdown { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+  .cost-breakdown-header { padding: 12px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); font-family: var(--font-head); font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; }
+  .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 18px; border-bottom: 1px solid rgba(26,47,69,0.5); font-size: 12px; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-row-label { color: var(--text); }
+  .cost-row-range { font-family: var(--font-mono); font-weight: 500; }
+  .cost-row-range.low { color: var(--accent2); }
+  .cost-row-range.mid { color: var(--warn); }
+  .cost-row-range.high { color: var(--accent3); }
+  .cost-row-range.purple { color: var(--purple); }
+  .cost-row.total-row { background: rgba(0,200,255,0.04); border-top: 1px solid var(--accent); }
+  .cost-row.total-row .cost-row-label { font-family: var(--font-head); font-weight: 700; color: #fff; }
+  .cost-row.total-row .cost-row-range { font-family: var(--font-head); font-size: 14px; font-weight: 800; color: var(--accent); }
+  .cost-row.section-header { background: rgba(0,0,0,0.3); }
+  .cost-row.section-header .cost-row-label { font-family: var(--font-head); font-weight: 700; font-size: 11px; }
+
+  /* ── UTILS ── */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .reset-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .row-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+
+  .progress-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .progress-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .progress-chip .chip-val { font-family: var(--font-head); font-weight: 700; font-size: 13px; }
+  .chip-opc .chip-val { color: var(--accent); }
+  .chip-prop .chip-val { color: var(--purple); }
+  .chip-tm .chip-val { color: var(--accent2); }
+
+  @media (max-width: 520px) {
+    .tabs { flex-direction: column; }
+    .header-right { width: 100%; justify-content: flex-start; }
+    .tm-grid { grid-template-columns: 1fr 1fr; }
+    .tm-detail-grid { grid-template-columns: 1fr; }
+    .cost-row { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-line">CyberNeurix</div>
+      <h1>Legal & IP <span>Command Centre</span></h1>
+      <div class="subtitle">OPC Registration · Proprietorship Setup · Trademark Portfolio · Karnataka</div>
+    </div>
+    <div class="header-right">
+      <div class="stat-pill">
+        <div class="stat-pill-val opc" id="opcPct">0%</div>
+        <div class="stat-pill-label">OPC<br>Progress</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val prop" id="propPct">0%</div>
+        <div class="stat-pill-label">Prop.<br>Progress</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val tm" id="tmPct">0%</div>
+        <div class="stat-pill-label">TM<br>Progress</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right; margin-bottom:28px;">
+    <span id="syncStatus">◌ Loading…</span>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="opc" onclick="switchTab('opc', this)">▸ OPC Setup</button>
+    <button class="tab-btn prop-tab" data-tab="prop" onclick="switchTab('prop', this)">⇄ Proprietorship</button>
+    <button class="tab-btn tm-tab" data-tab="tm" onclick="switchTab('tm', this)">™ Trademarks</button>
+    <button class="tab-btn costs-tab" data-tab="costs" onclick="switchTab('costs', this)">₹ Costs</button>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TAB: OPC SETUP
+  ════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-opc">
+
+    <div class="section-label">Phase 0 — Pre-Validation</div>
+    <div class="phase active-phase" id="phase0">
+      <div class="phase-header" onclick="togglePhase('phase0')">
+        <span class="phase-badge">Phase 0</span>
+        <div class="phase-title">Pre-Validation Layer<small>Eliminate rejection risk before touching MCA</small></div>
+        <span class="phase-progress-mini" id="prog0">0/7</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill0" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-0-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Finalize company name variants (2–3)</div><div class="step-desc">CyberNeurix Technologies / Labs / Systems (OPC) Pvt Ltd</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">MCA company name search</div><div class="step-desc">Check existing registrations on mca.gov.in — avoid identical/phonetically similar names</div><div class="tags"><span class="step-tag tag-critical">Critical</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Trademark search (CGPDTM)</div><div class="step-desc">Search via ipindiaonline.gov.in — check all name variants including CyberNeurix</div><div class="tags"><span class="step-tag tag-critical">Critical</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Finalize Nominee (Indian resident)</div><div class="step-desc">Confirm PAN + Aadhaar availability and willingness to sign INC-3</div><div class="tags"><span class="step-tag tag-mandatory">Mandatory for OPC</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Digitize Director documents</div><div class="step-desc">PAN, Aadhaar, Passport photo, active email + mobile</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Digitize Nominee documents</div><div class="step-desc">PAN, Aadhaar, active email + mobile</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-0-6"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Collect Registered Office proofs</div><div class="step-desc">Rent agreement / ownership proof + utility bill (&lt;2 months old) + NOC from owner</div><div class="tags"><span class="step-tag tag-important">80% rejection prevention</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="section-label">Phase 1–2 — Identity & Name</div>
+    <div class="phase active-phase" id="phase1">
+      <div class="phase-header" onclick="togglePhase('phase1')">
+        <span class="phase-badge">Phase 1</span>
+        <div class="phase-title">DSC Setup<small>Enable digital signing capability</small></div>
+        <span class="phase-progress-mini" id="prog1">0/3</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill1" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-1-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Choose DSC provider</div><div class="step-desc">eMudhra or Capricorn — both support Aadhaar eKYC flow</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-1-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Complete DSC application</div><div class="step-desc">Aadhaar eKYC + video verification</div><div class="tags"><span class="step-tag tag-paid">₹1,000 – ₹1,500</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-1-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Download and test DSC token</div><div class="step-desc">Verify signing works before proceeding to MCA filings</div><div class="tags"><span class="step-tag tag-critical">Verify before filing</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="phase active-phase" id="phase2">
+      <div class="phase-header" onclick="togglePhase('phase2')">
+        <span class="phase-badge">Phase 2</span>
+        <div class="phase-title">Name Reservation (SPICe+ Part A)<small>Secure company name via MCA</small></div>
+        <span class="phase-progress-mini" id="prog2">0/3</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill2" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-2-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Create MCA account</div><div class="step-desc">Register on mca.gov.in as a user</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-2-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">File SPICe+ Part A</div><div class="step-desc">Submit 2 name options. Business activity: Cybersecurity consulting, IT services, training and software development</div><div class="tags"><span class="step-tag tag-paid">₹1,000 fee</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-2-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Await name approval</div><div class="step-desc">MCA turnaround: 1–3 business days. Name reservation valid for 20 days — act immediately.</div><div class="tags"><span class="step-tag tag-important">20-day expiry — act fast</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="section-label">Phase 3 — Incorporation</div>
+    <div class="phase active-phase" id="phase3">
+      <div class="phase-header" onclick="togglePhase('phase3')">
+        <span class="phase-badge">Phase 3</span>
+        <div class="phase-title">Incorporation Execution (SPICe+ Part B)<small>Complete legal incorporation</small></div>
+        <span class="phase-progress-mini" id="prog3">0/8</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill3" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-3-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Fill SPICe+ Part B</div><div class="step-desc">Company type → OPC · Capital → ₹1L · Enter Director + Nominee details</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Prepare mandatory attachments</div><div class="step-desc">PAN + Aadhaar (Director + Nominee) · Address proof · NOC from property owner</div><div class="tags"><span class="step-tag tag-mandatory">Do Not Skip</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Prepare DIR-2 (Director consent)</div><div class="step-desc">Director consent to act form — signed digitally</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Prepare INC-3 (Nominee consent)</div><div class="step-desc">Nominee's written consent — signed by nominee</div><div class="tags"><span class="step-tag tag-mandatory">OPC Critical</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Draft MOA with specific objects</div><div class="step-desc">Include: Cybersecurity consulting · SIEM/IT services · Training & education · Software/tool development. Be specific — mention CNIS, Rix modules</div><div class="tags"><span class="step-tag tag-important">Be Specific</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Complete AOA + AGILE-PRO form</div><div class="step-desc">Use default AOA template. AGILE-PRO handles GST/EPFO/ESIC registrations simultaneously</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-6"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">DSC signing (Director + Nominee)</div><div class="step-desc">Both parties digitally sign all forms before submission</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-3-7"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">CA/CS certification + Submit + Pay</div><div class="step-desc">Even in DIY mode — professional certification is mandatory. Then submit and pay govt fees.</div><div class="tags"><span class="step-tag tag-paid">₹1K–3K (CA) + ₹2K–5K (Govt + stamp duty)</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="section-label">Phase 4–5 — Activation & Compliance</div>
+    <div class="phase active-phase" id="phase4">
+      <div class="phase-header" onclick="togglePhase('phase4')">
+        <span class="phase-badge">Phase 4</span>
+        <div class="phase-title">Activation Layer<small>Turn entity into an operational business</small></div>
+        <span class="phase-progress-mini" id="prog4">0/10</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill4" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-4-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Download COI, PAN, TAN from MCA</div><div class="step-desc">Verify all details match your documents exactly</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">File INC-20A (Commencement of Business)</div><div class="step-desc">Declaration that every subscriber has paid up their share value. Must be filed within 180 days of incorporation.</div><div class="tags"><span class="step-tag tag-mandatory">180-day hard deadline</span><span class="step-tag tag-critical">₹50K penalty if missed</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Issue share certificate to yourself</div><div class="step-desc">Must be issued within 60 days of incorporation. Physical certificate signed, stamped, retained on record.</div><div class="tags"><span class="step-tag tag-mandatory">60-day deadline</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Open company bank account</div><div class="step-desc">ICICI / HDFC / Axis — bring COI, PAN, MOA/AOA and board resolution</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Pass board resolution for bank account</div><div class="step-desc">Formal resolution authorising the bank account opening and signatory</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Appoint statutory auditor + file ADT-1</div><div class="step-desc">Appoint CA as auditor AND file ADT-1 on MCA portal — both required within 30 days</div><div class="tags"><span class="step-tag tag-mandatory">30-day deadline</span><span class="step-tag tag-paid">₹5K–₹15K/year</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-6"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Set up accounting software</div><div class="step-desc">Zoho Books or Tally — track invoices and expenses from Day 1</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-7"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Decide on GST registration</div><div class="step-desc">Register if: B2B clients, interstate services, or scaling revenue. Otherwise defer voluntarily.</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-8"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Register on Udyam (MSME)</div><div class="step-desc">Free registration at udyamregistration.gov.in — unlocks govt scheme eligibility, priority lending, tender advantages. ~10 minutes.</div><div class="tags"><span class="step-tag tag-free">Free · Highly Recommended</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-4-9"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Professional Tax registration (Karnataka)</div><div class="step-desc">Required if you draw a salary from the company. Register with Karnataka PT authority.</div><div class="tags"><span class="step-tag tag-mandatory">Karnataka requirement</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="phase active-phase" id="phase5">
+      <div class="phase-header" onclick="togglePhase('phase5')">
+        <span class="phase-badge">Phase 5</span>
+        <div class="phase-title">Annual Compliance Layer<small>Keep entity alive and clean</small></div>
+        <span class="phase-progress-mini" id="prog5">0/7</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill5" style="width:0%"></div></div>
+      <div class="phase-body">
+        <div class="step" data-phase="opc" data-id="opc-5-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">File AOC-4 (Annual Financial Statements)</div><div class="step-desc">Due within 60 days of AGM (180 days from financial year end for OPC)</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">File MGT-7A (Annual Return — OPC)</div><div class="step-desc">OPCs file MGT-7A (simplified form), not MGT-7 — due within 60 days of AGM</div><div class="tags"><span class="step-tag tag-important">OPC files MGT-7A not MGT-7</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">File ITR-6 (Income Tax Return)</div><div class="step-desc">Annual corporate income tax return — due 31 Oct (if audit required) or 31 July</div><div class="tags"><span class="step-tag tag-mandatory">Tax dept — separate from MCA</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">DIR-3 KYC (Director KYC — annual)</div><div class="step-desc">Every director must file DIR-3 KYC by 30 September each year. Missing it deactivates your DIN — ₹5,000 to reactivate.</div><div class="tags"><span class="step-tag tag-mandatory">30 Sep deadline every year</span><span class="step-tag tag-critical">DIN deactivation if missed</span></div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Advance tax payments (quarterly)</div><div class="step-desc">If projected tax liability exceeds ₹10,000/year — pay in 4 instalments: 15 Jun, 15 Sep, 15 Dec, 15 Mar</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">GST returns (if registered)</div><div class="step-desc">Monthly GSTR-1 + GSTR-3B, or quarterly if under QRMP scheme</div></div></div>
+        <div class="step" data-phase="opc" data-id="opc-5-6"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content"><div class="step-name">Set compliance budget</div><div class="step-desc">Annual ongoing cost: ₹8,000–₹20,000 (CA fees + MCA + IT filing fees)</div><div class="tags"><span class="step-tag tag-paid">₹8K–₹20K/year</span></div></div></div>
+      </div>
+    </div>
+
+    <div class="row-actions">
+      <button class="reset-btn" onclick="resetSection('opc')">↺ Reset OPC Progress</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TAB: PROPRIETORSHIP
+  ════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-prop">
+
+    <div class="notice prop-notice">
+      <strong>Entity Strategy:</strong> A Proprietorship is the simplest and cheapest entity for CyberNeurix's brand operations. No MCA filing, no statutory auditor, no corporate tax. Income is taxed at your personal slab rate. Run it in parallel to the OPC — with a clear IP licensing and service agreement between them to avoid CA headaches.
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 1: ESTABLISHMENT
+    ────────────────────────────────────── -->
+    <div class="section-label">Step 1 — Entity Establishment</div>
+
+    <div class="phase prop-phase" id="prop-phase0">
+      <div class="phase-header" onclick="togglePhase('prop-phase0')">
+        <span class="phase-badge">Establish</span>
+        <div class="phase-title">Core Proprietorship Setup<small>No govt registration fee — just GST, MSME &amp; bank account</small></div>
+        <span class="phase-progress-mini" id="prog-prop0">0/6</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-prop0" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="prop" data-id="prop-0-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Decide trade name</div>
+          <div class="step-desc">Use "CyberNeurix" as the trade name. Must not include "Pvt Ltd", "Ltd", "LLP" — adding these to a proprietorship is a legal offence. "CyberNeurix" or "CyberNeurix Technologies" are fine.</div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-0-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">GST Registration</div>
+          <div class="step-desc">Mandatory if: services revenue exceeds ₹20L/year OR you bill B2B clients who need a GSTIN on invoices. Self-file at gst.gov.in — your PAN becomes the GSTIN base. Select SAC codes: 998314 (IT consulting), 998313 (software), 999293 (education/training).</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Required for B2B invoicing</span><span class="step-tag tag-free">₹0 Govt fee</span></div>
+          <div class="prop-doc-list">
+            <div class="doc-list-title">Documents Required</div>
+            <div class="doc-item"><strong>PAN card</strong> of proprietor</div>
+            <div class="doc-item"><strong>Aadhaar card</strong> (for OTP-based eKYC)</div>
+            <div class="doc-item"><strong>Passport-size photo</strong></div>
+            <div class="doc-item"><strong>Business address proof</strong> — electricity bill / rent agreement (in proprietor's name or NOC from owner)</div>
+            <div class="doc-item"><strong>Bank account details</strong> (cancelled cheque or bank statement showing trade name)</div>
+            <div class="doc-item"><strong>Digital signature</strong> (optional — Aadhaar OTP eSign available)</div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-0-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Udyam MSME Registration</div>
+          <div class="step-desc">Free self-registration at udyamregistration.gov.in using Aadhaar + PAN. This is separate from your OPC Udyam registration. Gives access to MSME schemes and the critical 50% trademark fee discount (₹4,500 vs ₹9,000/mark).</div>
+          <div class="tags"><span class="step-tag tag-free">Free · 10 minutes</span><span class="step-tag tag-important">TM fee discount: 50%</span></div>
+          <div class="prop-doc-list">
+            <div class="doc-list-title">Documents Required</div>
+            <div class="doc-item"><strong>Aadhaar</strong> (mandatory — Aadhaar-linked mobile for OTP)</div>
+            <div class="doc-item"><strong>PAN card</strong> of proprietor</div>
+            <div class="doc-item"><strong>GSTIN</strong> (if registered — otherwise leave blank)</div>
+            <div class="doc-item"><strong>Bank account number + IFSC</strong></div>
+            <div class="doc-item"><strong>NIC activity codes</strong> — for cybersecurity consulting: 62011, 62012; for training: 85499</div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-0-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Open current bank account in trade name</div>
+          <div class="step-desc">Open "CyberNeurix" current account at any bank. Banks accept trade name accounts for proprietorships with GST cert or MSME cert as entity proof. Recommended: ICICI/HDFC/Axis for online banking, or SBI for govt tender payments.</div>
+          <div class="tags"><span class="step-tag tag-important">Keep separate from personal account</span></div>
+          <div class="prop-doc-list">
+            <div class="doc-list-title">Documents Required</div>
+            <div class="doc-item"><strong>PAN card</strong> of proprietor</div>
+            <div class="doc-item"><strong>Aadhaar card</strong></div>
+            <div class="doc-item"><strong>2 passport-size photos</strong></div>
+            <div class="doc-item"><strong>GST Registration Certificate</strong> OR Udyam Certificate (as entity proof)</div>
+            <div class="doc-item"><strong>Business address proof</strong> (utility bill / rent agreement)</div>
+            <div class="doc-item"><strong>Initial deposit</strong> as per bank requirement (typically ₹5,000–₹25,000 min balance)</div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-0-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Professional Tax Enrolment (Karnataka)</div>
+          <div class="step-desc">Self-employed professionals in Karnataka must enrol under the Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976. Annual PT liability: ₹2,500 if income exceeds ₹10L. Enrol at the PT authority portal or your local BBMP ward office (for Bangalore).</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Karnataka requirement</span></div>
+          <div class="prop-doc-list">
+            <div class="doc-list-title">Documents Required</div>
+            <div class="doc-item"><strong>PAN card</strong></div>
+            <div class="doc-item"><strong>Aadhaar card</strong></div>
+            <div class="doc-item"><strong>Proof of profession</strong> (GST certificate, MSME certificate, or trade name bank statement)</div>
+            <div class="doc-item"><strong>Address proof</strong></div>
+            <div class="doc-item"><strong>Photo</strong></div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-0-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Set up separate bookkeeping from Day 1</div>
+          <div class="step-desc">Keep proprietorship books 100% separate from OPC books and personal finances. Use Zoho Books Free plan for the proprietorship, or maintain a manual cash book. Never co-mingle OPC and proprietorship revenue — this creates CA and tax disasters.</div>
+          <div class="tags"><span class="step-tag tag-critical">Never co-mingle funds</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 2: BRAND OPERATIONS
+    ────────────────────────────────────── -->
+    <div class="section-label">Step 2 — Brand & Website Operations</div>
+
+    <div class="phase prop-phase" id="prop-phase1">
+      <div class="phase-header" onclick="togglePhase('prop-phase1')">
+        <span class="phase-badge">Brand</span>
+        <div class="phase-title">cyberneurix.com — Legal Compliance<small>Update site, legal pages, and invoice identity</small></div>
+        <span class="phase-progress-mini" id="prog-prop1">0/6</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-prop1" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="prop" data-id="prop-1-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Update website footer with correct legal entity</div>
+          <div class="step-desc">Add legal line: "© 2025 CyberNeurix — [Your Full Legal Name], Proprietor. All rights reserved." Do NOT use "Pvt Ltd" anywhere until OPC is incorporated. This is a legal misrepresentation.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Legal requirement</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-1-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Update Privacy Policy with proprietor identity</div>
+          <div class="step-desc">IT Act compliance requires your legal name, address, email, and grievance officer details. If you collect any user data (email subscribers, contact forms), you need a compliant Privacy Policy and a named grievance officer with 30-day response commitment.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">IT Act 2000 · Section 43A</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-1-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Update Terms of Use with correct entity + jurisdiction</div>
+          <div class="step-desc">Jurisdiction: Karnataka courts. Governing law: Indian law. Include disclaimer that content is for informational purposes and not professional cybersecurity advice (liability protection). Name the proprietor as the service provider.</div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-1-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Issue all invoices under proprietorship PAN + GSTIN</div>
+          <div class="step-desc">Every client invoice must show: Trade name (CyberNeurix), proprietor's legal name, address, GSTIN, PAN, SAC code, HSN code. GST invoice format is mandatory for registered taxpayers. Use Zoho or Wave for compliant invoice generation.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">GST invoice rules</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-1-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Establish inter-entity IP licensing agreement (Prop ↔ OPC)</div>
+          <div class="step-desc">Once OPC is incorporated, draft a licensing agreement: the Proprietorship licenses the CyberNeurix brand and trademarks to the OPC for a nominal fee. This prevents ownership ambiguity if trademark was filed under the proprietorship but revenue flows through OPC.</div>
+          <div class="tags"><span class="step-tag tag-important">Prevents CA and IP disputes</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-1-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Add Refund + Cancellation Policy (if selling products/courses)</div>
+          <div class="step-desc">Consumer Protection (E-Commerce) Rules 2020 require an explicit refund and cancellation policy for e-commerce sellers. If CyberNeurix sells courses, tools, or reports — this policy is legally mandatory and must be on the website.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">If e-commerce sales exist</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 3: TAX & ANNUAL COMPLIANCE
+    ────────────────────────────────────── -->
+    <div class="section-label">Step 3 — Tax & Annual Compliance</div>
+
+    <div class="phase prop-phase" id="prop-phase2">
+      <div class="phase-header" onclick="togglePhase('prop-phase2')">
+        <span class="phase-badge">Tax</span>
+        <div class="phase-title">Proprietorship Tax & Filing Obligations<small>Personal ITR + GST returns + PT — no corporate tax</small></div>
+        <span class="phase-progress-mini" id="prog-prop2">0/6</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-prop2" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="prop" data-id="prop-2-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Understand your tax structure</div>
+          <div class="step-desc">Proprietorship income is not taxed separately — it is added to your personal income and taxed at individual slab rates. New regime: 0% up to ₹3L, 5% (₹3L–7L), 10% (₹7L–10L), 15% (₹10L–12L), 20% (₹12L–15L), 30% above ₹15L. No ₹12.75L rebate for business income — only salary/other income qualifies for rebate.</div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-2-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">File ITR-3 or ITR-4 annually</div>
+          <div class="step-desc">File ITR-4 (Sugam) if using the presumptive taxation scheme under Section 44ADA — declare 50% of gross receipts as profit (no books required if receipts &lt; ₹50L). File ITR-3 (with books) if actual profits are lower than 50% or if receipts exceed ₹50L.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Deadline: 31 July each year</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-2-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Section 44ADA — Presumptive Taxation decision</div>
+          <div class="step-desc">If your professional receipts are under ₹50L/year, Sec 44ADA lets you declare 50% as income without maintaining books of accounts. Massive compliance simplification. Useful when actual expenses are less than 50% of receipts. Consult CA to evaluate annually.</div>
+          <div class="tags"><span class="step-tag tag-important">Major compliance simplification</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-2-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">GST Returns (if registered)</div>
+          <div class="step-desc">Monthly: GSTR-1 (outward supplies) by 11th, GSTR-3B (tax payment) by 20th. Or opt for QRMP scheme (quarterly returns) if turnover &lt; ₹5Cr/year — reduces filings from 24 to 8 per year. Annual return: GSTR-9 by 31 December.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Monthly or quarterly</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-2-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Pay Professional Tax (Karnataka) — annually</div>
+          <div class="step-desc">₹2,500/year if income exceeds ₹10L. Pay at the Karnataka PT portal or through your bank challan. Keep payment receipt — required during GST audit and ITR filing. Due: typically before 31 March each year.</div>
+          <div class="tags"><span class="step-tag tag-paid">₹2,500/yr</span><span class="step-tag tag-mandatory">Before 31 March</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-2-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Advance tax payments (if tax liability &gt; ₹10,000)</div>
+          <div class="step-desc">Pay advance tax in 4 instalments: 15% by 15 Jun, 45% by 15 Sep, 75% by 15 Dec, 100% by 15 Mar. Failure attracts interest under Sec 234B and 234C. If using 44ADA, all advance tax due by 15 March in one shot.</div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- ──────────────────────────────────────
+         STEP 4: OPC WIND-DOWN (OPTIONAL)
+    ────────────────────────────────────── -->
+    <div class="section-label">Step 4 — OPC Wind-Down (Optional)</div>
+
+    <div class="phase prop-phase" id="prop-phase3">
+      <div class="phase-header" onclick="togglePhase('prop-phase3')">
+        <span class="phase-badge">Wind-Down</span>
+        <div class="phase-title">OPC Strike-Off via STK-2<small>Only if you decide OPC is redundant — not mandatory</small></div>
+        <span class="phase-progress-mini" id="prog-prop3">0/6</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-prop3" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="prop" data-id="prop-3-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Confirm nil outstanding dues across all authorities</div>
+          <div class="step-desc">MCA annual returns, Income Tax (ITR-6), GST returns, and professional tax must all be filed with zero pending penalties before STK-2 can be filed. MCA will reject the application if any filings are pending.</div>
+          <div class="tags"><span class="step-tag tag-critical">Hard prerequisite</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-3-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Transfer any IP / contracts from OPC to Proprietorship</div>
+          <div class="step-desc">If trademarks or contracts were in OPC's name, execute formal assignment agreements before closure. Trademark assignments must be filed with IP India (Form TM-P). IP transferred without proper assignment documentation creates unresolvable ownership disputes later.</div>
+          <div class="tags"><span class="step-tag tag-critical">Do before any MCA filing</span></div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-3-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Hold board meeting + pass special resolution for closure</div>
+          <div class="step-desc">As the sole director, pass a resolution to wind down the company, settle all liabilities, and return paid-up capital. Maintain signed board minutes — required for STK-2 attachment.</div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-3-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">File STK-2 on MCA portal</div>
+          <div class="step-desc">File application for voluntary strike-off. Attach: Indemnity bond (on stamp paper), Affidavit of no liabilities (notarised), Statement of accounts (nil, signed by CA), Board resolution for closure, and NOC from all regulators if applicable.</div>
+          <div class="tags"><span class="step-tag tag-paid">₹5,000 govt fee</span></div>
+          <div class="prop-doc-list">
+            <div class="doc-list-title">STK-2 Required Attachments</div>
+            <div class="doc-item"><strong>Indemnity bond</strong> — on Rs. 100 stamp paper, notarised</div>
+            <div class="doc-item"><strong>Affidavit of no outstanding liabilities</strong> — notarised by proprietor/director</div>
+            <div class="doc-item"><strong>Statement of accounts</strong> (nil) — signed by CA, not older than 30 days</div>
+            <div class="doc-item"><strong>Board resolution</strong> for closure — certified copy</div>
+            <div class="doc-item"><strong>DSC of director</strong> for form signing</div>
+            <div class="doc-item"><strong>CA certification</strong> on form (mandatory)</div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-3-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Close company bank account after MCA processes STK-2</div>
+          <div class="step-desc">Only close the bank account after you receive the Gazette notification from MCA confirming strike-off. Retain the account closure letter permanently.</div>
+        </div></div>
+
+        <div class="step" data-phase="prop" data-id="prop-3-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Retain all records for 8 years post-closure</div>
+          <div class="step-desc">Books of accounts, MOA/AOA, board minutes, COI, tax filings — retain even after strike-off. IT dept can reopen assessments for 6 years; GST dept for 5 years. Digital copies are sufficient but must be backed up.</div>
+          <div class="tags"><span class="step-tag tag-mandatory">Legal requirement</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <div class="row-actions">
+      <button class="reset-btn" onclick="resetSection('prop')">↺ Reset Proprietorship Progress</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TAB: TRADEMARKS
+  ════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-tm">
+
+    <div class="notice">
+      <strong>IP Strategy:</strong> File under whichever entity primarily commercialises the mark — proprietorship for brand/content, OPC for software products. Class 42 (IT/cybersecurity services) is primary. Class 9 (software) for CNIS. Class 41 (education/training) for course-based offerings. MSME rate: ₹4,500/mark/class. Click any card to cycle its status.
+    </div>
+
+    <!-- PRE-FILING STEPS -->
+    <div class="section-label">Pre-Filing Groundwork</div>
+    <div class="phase tm-phase" id="tm-phase0">
+      <div class="phase-header" onclick="togglePhase('tm-phase0')">
+        <span class="phase-badge">Pre-Filing</span>
+        <div class="phase-title">Trademark Strategy & Search<small>Do this before filing any application — mistakes are expensive</small></div>
+        <span class="phase-progress-mini" id="prog-tm0">0/6</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-tm0" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="tm" data-id="tm-0-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Classify all marks: Word mark vs Logo (Device) mark</div>
+          <div class="step-desc">File word marks first — they give broader protection (any font, colour, style). File logo/device marks separately only if you have a finalised designed logo. Don't file logo marks with a placeholder design you might change later.</div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-0-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Confirm MSME status (Udyam certificate) for fee discount</div>
+          <div class="step-desc">Upload Udyam certificate when filing TM-A to claim ₹4,500 rate (vs ₹9,000 at full rate). On 10 marks this saves ₹45,000. Udyam must match the filing entity — ensure Proprietorship Udyam is ready before filing under proprietorship name.</div>
+          <div class="tags"><span class="step-tag tag-important">50% cost saving — don't skip</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-0-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Decide filing entity for each mark</div>
+          <div class="step-desc">Brand marks (CyberNeurix, Rix umbrella) — file under Proprietorship if that's the commercial entity now. Product marks (CNIS, RixOne) — consider filing under OPC once incorporated. IP ownership should match who will enforce and license the mark. Changing ownership later requires TM-P assignment (₹5,000/mark).</div>
+          <div class="tags"><span class="step-tag tag-critical">Hard to change later without cost</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-0-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Search all marks on IP India before filing</div>
+          <div class="step-desc">Go to ipindiaonline.gov.in → Trademark Search. Search each mark name: CyberNeurix, CNIS, Rix, RixOne, RixLogix, RixTrace, RixControl, RixCloud, RixNexis, RixIntel. Search both phonetically similar names and exact matches. Look in Class 42, 9, and 41 separately.</div>
+          <div class="tags"><span class="step-tag tag-critical">Non-negotiable — do before any application</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-0-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Create IP India account (ipindiaservices.gov.in)</div>
+          <div class="step-desc">Register as applicant. Link Aadhaar for eSign capability. You'll need this account to file TM-A and track all applications. Keep login credentials safe — all status communications come to this account email.</div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-0-5"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Engage IP attorney (optional but recommended)</div>
+          <div class="step-desc">For first-time filers with 10+ marks, an IP attorney (₹10,000–₹25,000 total) drafts the TM-A descriptions correctly, handles examination report objections (very common), and monitors opposition period. Objections from the examiner are the #1 reason applications drag past 2 years.</div>
+          <div class="tags"><span class="step-tag tag-important">Strongly advised for 10+ marks</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- TM PORTFOLIO CARDS -->
+    <div class="section-label">Brand Marks Portfolio — Click card to cycle status</div>
+    <div class="tm-grid" id="tmCardGrid"></div>
+
+    <!-- TM FILING PROCESS -->
+    <div class="section-label">Filing Process (Per Mark)</div>
+    <div class="phase tm-phase" id="tm-phase1">
+      <div class="phase-header" onclick="togglePhase('tm-phase1')">
+        <span class="phase-badge">Filing</span>
+        <div class="phase-title">TM-A Application Process<small>Steps for each trademark application — ~12–18 months to registration</small></div>
+        <span class="phase-progress-mini" id="prog-tm1">0/5</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-tm1" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="tm" data-id="tm-1-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">File TM-A application on IP India portal</div>
+          <div class="step-desc">Select mark type (word/device), specify goods/services description, select class(es). Upload Udyam cert for MSME rate. Upload logo image if device mark (JPG, 8cm x 8cm, black & white). Pay govt fee online.</div>
+          <div class="tags"><span class="step-tag tag-paid">₹4,500/class (MSME) or ₹9,000/class</span></div>
+          <div class="doc-list">
+            <div class="doc-list-title">Documents Required for TM-A</div>
+            <div class="doc-item"><strong>Applicant identity proof</strong> — PAN card (mandatory)</div>
+            <div class="doc-item"><strong>Udyam / MSME certificate</strong> — for discounted fee rate</div>
+            <div class="doc-item"><strong>Logo/mark image</strong> (JPG, 8×8 cm, black & white) — only for device/logo marks</div>
+            <div class="doc-item"><strong>Power of Attorney (TM-48)</strong> — only if filing through an IP attorney</div>
+            <div class="doc-item"><strong>User affidavit</strong> — if claiming prior use of the mark (Form TM-M)</div>
+            <div class="doc-item"><strong>Applicant address</strong> — must match GST / Udyam registration address</div>
+          </div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-1-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Receive filing receipt + application number</div>
+          <div class="step-desc">Filing date is your priority date — from this date you are protected against anyone filing the same mark, even before registration. Use ™ symbol immediately after filing. You can only use ® after full registration.</div>
+          <div class="tags"><span class="step-tag tag-important">™ from filing date · ® only after registration</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-1-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Vienna Codification (for logo/device marks)</div>
+          <div class="step-desc">If you filed a device/logo mark, the examiner assigns Vienna figurative codes. No action needed — this is administrative. Just acknowledge it in examination report if raised.</div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-1-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Respond to Examination Report (if issued)</div>
+          <div class="step-desc">~60–70% of applications receive an examination report. Common objections: descriptiveness (mark describes the service), similarity to existing marks, or incorrect class specification. You have 30 days to respond. Non-response = abandonment. File response on IP India portal with written arguments and supporting evidence.</div>
+          <div class="tags"><span class="step-tag tag-critical">30-day hard deadline — zero extensions</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-1-4"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Monitor TM Journal publication + opposition window</div>
+          <div class="step-desc">After examination is cleared, mark is published in the Trademark Journal (bi-weekly). A 4-month opposition window opens — any third party can oppose your mark. If no opposition filed → registration certificate issued. Track status monthly on IP India portal. Total timeline from filing to registration: typically 12–24 months.</div>
+          <div class="tags"><span class="step-tag tag-important">Monitor every month after journal publication</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- TM RENEWAL -->
+    <div class="section-label">Ongoing TM Maintenance</div>
+    <div class="phase tm-phase" id="tm-phase2">
+      <div class="phase-header" onclick="togglePhase('tm-phase2')">
+        <span class="phase-badge">Renewal</span>
+        <div class="phase-title">Trademark Renewal & Enforcement<small>Trademarks last 10 years — renewable indefinitely</small></div>
+        <span class="phase-progress-mini" id="prog-tm2">0/4</span>
+        <span class="phase-chevron">▶</span>
+      </div>
+      <div class="phase-progress-bar"><div class="phase-progress-fill" id="fill-tm2" style="width:0%"></div></div>
+      <div class="phase-body">
+
+        <div class="step" data-phase="tm" data-id="tm-2-0"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Set TM renewal calendar reminders (10 years from filing date)</div>
+          <div class="step-desc">Each mark is valid for 10 years from its filing date, not registration date. Renewal (Form TM-R) must be filed within 6 months before expiry. Late renewal is possible within 1 year after expiry but attracts surcharge. Set calendar reminders 12 months before each mark's expiry.</div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-2-1"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Use marks continuously to avoid cancellation</div>
+          <div class="step-desc">A trademark can be cancelled for non-use if you don't use it for 5 consecutive years after registration. Keep evidence of use: website screenshots, invoices with the mark, marketing materials. Maintain a use-evidence folder for each mark.</div>
+          <div class="tags"><span class="step-tag tag-critical">Non-use for 5 years = cancellable</span></div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-2-2"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Watch for infringement and file oppositions if needed</div>
+          <div class="step-desc">Monitor IP India's TM Journal every 2 weeks for similar marks in Classes 9, 41, 42. If you spot an infringing mark during its 4-month opposition window, file Form TM-O with grounds of opposition (prior use, likelihood of confusion). Missing the window forfeits opposition rights.</div>
+        </div></div>
+
+        <div class="step" data-phase="tm" data-id="tm-2-3"><div class="step-check" onclick="toggleStep(this)"></div><div class="step-content">
+          <div class="step-name">Transfer marks to OPC if entity structure changes (TM-P)</div>
+          <div class="step-desc">If marks were filed under proprietorship but you later want OPC to own them, file Form TM-P (Assignment/Transmission) on IP India. Fee: ₹5,000/mark (govt) + attorney fees. This is a formal process — execute a trademark assignment deed before filing.</div>
+          <div class="tags"><span class="step-tag tag-paid">₹5,000/mark if assignment needed</span></div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <div class="row-actions">
+      <button class="reset-btn" onclick="resetSection('tm')">↺ Reset TM Progress</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TAB: COSTS
+  ════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-costs">
+    <div class="notice">
+      <strong>Note:</strong> Proprietorship has <strong>zero registration fees</strong> — the only mandatory cost is Professional Tax (₹2,500/yr Karnataka). Trademark fees at MSME rate (₹4,500/mark/class) require a valid Udyam certificate uploaded at time of filing.
+    </div>
+
+    <div class="section-label">Proprietorship Costs</div>
+    <div class="costs-grid">
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">One-time · Free</div>
+        <div class="cost-title">GST Registration</div>
+        <div class="cost-amount">₹0</div>
+        <div class="cost-note">Self-file on gst.gov.in. Zero govt fee. Required only when revenue &gt;₹20L/yr or for B2B billing. SAC codes: 998314, 998313, 999293.</div>
+      </div>
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">One-time · Free</div>
+        <div class="cost-title">Udyam (MSME) Registration</div>
+        <div class="cost-amount">₹0</div>
+        <div class="cost-note">Free at udyamregistration.gov.in. Enables ₹4,500 TM rate vs ₹9,000. Saves ₹45,000 on 10 marks.</div>
+      </div>
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">Annual · Karnataka</div>
+        <div class="cost-title">Professional Tax</div>
+        <div class="cost-amount">₹2,500/yr</div>
+        <div class="cost-note">₹2,500/year if income &gt;₹10L. Enrolment is free. Due before 31 March each year.</div>
+      </div>
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">Annual · Personal ITR</div>
+        <div class="cost-title">Income Tax Filing (ITR-4 / ITR-3)</div>
+        <div class="cost-amount">₹0–3,000/yr</div>
+        <div class="cost-note">Self-file free on incometax.gov.in. If using 44ADA presumptive: declare 50% of receipts as income, no books required. CA charges ₹1,500–3,000 if needed.</div>
+      </div>
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">Annual · If GST registered</div>
+        <div class="cost-title">GST Return Filing</div>
+        <div class="cost-amount">₹0–3,000/yr</div>
+        <div class="cost-note">Self-file via GST portal. CA charges ₹1,000–3,000/yr. QRMP scheme reduces filings to 8/year if turnover &lt;₹5Cr.</div>
+      </div>
+      <div class="cost-card cat-prop">
+        <div class="cost-cat">One-time · Banking</div>
+        <div class="cost-title">Current Account Opening</div>
+        <div class="cost-amount">₹0–5,000</div>
+        <div class="cost-note">No opening fee at most banks. Minimum balance requirement: ₹5,000–₹25,000 depending on bank tier. No CA or board resolution needed.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Trademark Costs (MSME Rate)</div>
+    <div class="costs-grid">
+      <div class="cost-card cat-tm">
+        <div class="cost-cat">1 Application · MSME</div>
+        <div class="cost-title">CyberNeurix (Class 42)</div>
+        <div class="cost-amount">₹4,500</div>
+        <div class="cost-note">Primary brand mark · IT/cybersecurity services · 1 TM-A application</div>
+      </div>
+      <div class="cost-card cat-tm">
+        <div class="cost-cat">2 Applications · MSME</div>
+        <div class="cost-title">CNIS™ (Class 42 + Class 9)</div>
+        <div class="cost-amount">₹9,000</div>
+        <div class="cost-note">Class 42 (services) + Class 9 (software product) · 2 separate TM-A applications · ₹4,500 each</div>
+      </div>
+      <div class="cost-card cat-tm">
+        <div class="cost-cat">8 Applications · MSME</div>
+        <div class="cost-title">Rix + 7 Module Marks</div>
+        <div class="cost-amount">₹36,000</div>
+        <div class="cost-note">Rix (umbrella), RixOne, RixLogix, RixTrace, RixControl, RixCloud, RixNexis, RixIntel · ₹4,500 each · Class 42</div>
+      </div>
+      <div class="cost-card cat-pro">
+        <div class="cost-cat">Optional · Recommended</div>
+        <div class="cost-title">IP Attorney Fees</div>
+        <div class="cost-amount">₹10,000–25,000</div>
+        <div class="cost-note">For all 10 marks: drafting, filing, and examination report responses. Strongly advised for first-time filers — objections are common (60–70% of applications).</div>
+      </div>
+      <div class="cost-card cat-tm">
+        <div class="cost-cat">Every 10 Years · Per Mark</div>
+        <div class="cost-title">TM Renewal (TM-R)</div>
+        <div class="cost-amount">₹9,000/mark</div>
+        <div class="cost-note">Full rate applies at renewal (no MSME discount). File 6 months before expiry. 10 marks = ₹90,000 per renewal cycle.</div>
+      </div>
+      <div class="cost-card cat-govt">
+        <div class="cost-cat">Only if needed · Per Mark</div>
+        <div class="cost-title">TM Assignment (TM-P)</div>
+        <div class="cost-amount">₹5,000/mark</div>
+        <div class="cost-note">For transferring marks from Proprietorship → OPC. Requires a trademark assignment deed. Not needed if filing under correct entity from start.</div>
+      </div>
+    </div>
+
+    <div class="cost-breakdown">
+      <div class="cost-breakdown-header">Full Cost Summary — Year 1</div>
+
+      <div class="cost-row section-header">
+        <span class="cost-row-label" style="color:var(--purple);">Proprietorship Setup &amp; Year 1 Operations</span>
+        <span></span>
+      </div>
+      <div class="cost-row"><span class="cost-row-label">GST Registration + Udyam MSME</span><span class="cost-row-range low">₹0</span></div>
+      <div class="cost-row"><span class="cost-row-label">Current Account (min balance)</span><span class="cost-row-range low">₹0 – ₹5,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">Professional Tax (Karnataka)</span><span class="cost-row-range low">₹2,500</span></div>
+      <div class="cost-row"><span class="cost-row-label">ITR-4 filing (self or CA)</span><span class="cost-row-range low">₹0 – ₹3,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">GST Returns (self or CA, if registered)</span><span class="cost-row-range low">₹0 – ₹3,000</span></div>
+
+      <div class="cost-row section-header">
+        <span class="cost-row-label" style="color:var(--accent2);">Trademarks — All 10 Marks (MSME Rate)</span>
+        <span></span>
+      </div>
+      <div class="cost-row"><span class="cost-row-label">CyberNeurix — Class 42</span><span class="cost-row-range low">₹4,500</span></div>
+      <div class="cost-row"><span class="cost-row-label">CNIS™ — Class 42 + Class 9 (2 applications)</span><span class="cost-row-range low">₹9,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">Rix + 7 Module Marks — Class 42 (8 applications)</span><span class="cost-row-range mid">₹36,000</span></div>
+      <div class="cost-row"><span class="cost-row-label">IP Attorney (optional — recommended)</span><span class="cost-row-range mid">₹10,000 – ₹25,000</span></div>
+
+      <div class="cost-row total-row">
+        <span class="cost-row-label">Proprietorship Year 1 Total</span>
+        <span class="cost-row-range" style="color:var(--purple);">≈ ₹2,500 – ₹11,500</span>
+      </div>
+      <div class="cost-row total-row" style="border-top:none;">
+        <span class="cost-row-label">All 10 Trademarks (self-file, MSME govt fees only)</span>
+        <span class="cost-row-range" style="color:var(--accent2);">₹49,500</span>
+      </div>
+      <div class="cost-row total-row" style="border-top:none;">
+        <span class="cost-row-label">All 10 Trademarks (with IP attorney)</span>
+        <span class="cost-row-range" style="color:var(--warn);">₹59,500 – ₹74,500</span>
+      </div>
+      <div class="cost-row total-row" style="border-top:1px solid var(--accent);">
+        <span class="cost-row-label">Grand Total Year 1 (Prop + All TMs, self-file)</span>
+        <span class="cost-row-range">≈ ₹52,000 – ₹61,000</span>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- end shell -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+// ── TM Marks Data ──
+const TM_MARKS = [
+  { id: 'tm-cyberneurix', name: 'CyberNeurix',  type: 'Parent Brand',      classes: 'Class 42 · 9 · 41', fee: '₹4,500–13,500' },
+  { id: 'tm-cnis',        name: 'CNIS™',         type: 'Suite Brand',       classes: 'Class 42 · 9',      fee: '₹9,000' },
+  { id: 'tm-rix',         name: 'Rix',            type: 'Module Umbrella',   classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixone',      name: 'RixOne',         type: 'Dashboard',         classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixlogix',    name: 'RixLogix',       type: 'Log Analysis',      classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixtrace',    name: 'RixTrace',       type: 'Dark Web Monitor',  classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixcontrol',  name: 'RixControl',     type: 'Zero-Trust',        classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixcloud',    name: 'RixCloud',        type: 'Cloud Security',   classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixnexis',    name: 'RixNexis',       type: 'Remediation',       classes: 'Class 42',          fee: '₹4,500' },
+  { id: 'tm-rixintel',    name: 'RixIntel',        type: 'Threat Intel',     classes: 'Class 42',          fee: '₹4,500' },
+];
+
+const STATUS_CYCLE = ['todo', 'pending', 'filed', 'registered'];
+const STATUS_LABELS = { todo: 'Not Started', pending: 'In Progress', filed: 'Filed', registered: 'Registered ®' };
+const STATUS_CLASSES = { todo: 'tm-status-todo', pending: 'tm-status-pending', filed: 'tm-status-filed', registered: 'tm-status-registered' };
+const CARD_CLASSES = { todo: '', pending: 'tm-pending', filed: 'tm-filed', registered: 'tm-registered' };
+const STATUS_ICONS = { todo: '○', pending: '◑', filed: '◕', registered: '●' };
+
+// ── Supabase ──
+const SUPABASE_URL = 'https://veovscvlsegoiuphvgwu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlb3ZzY3Zsc2Vnb2l1cGh2Z3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTM2OTEsImV4cCI6MjA5MDAyOTY5MX0.xWg1HjwUs_FC285cYpA8VcCeqSqFKLn1j_2llnm9Zrk';
+const TRACKER_ID = 'cnx_legal_v3';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let state = { steps: {}, tmStatuses: {} };
+let saveTimer = null;
+
+// ── Phase definitions ──
+const PHASE_DEFS = {
+  opc: [
+    { id: 'phase0', count: 7,  progEl: 'prog0',      fillEl: 'fill0' },
+    { id: 'phase1', count: 3,  progEl: 'prog1',      fillEl: 'fill1' },
+    { id: 'phase2', count: 3,  progEl: 'prog2',      fillEl: 'fill2' },
+    { id: 'phase3', count: 8,  progEl: 'prog3',      fillEl: 'fill3' },
+    { id: 'phase4', count: 10, progEl: 'prog4',      fillEl: 'fill4' },
+    { id: 'phase5', count: 7,  progEl: 'prog5',      fillEl: 'fill5' },
+  ],
+  prop: [
+    { id: 'prop-phase0', count: 6, progEl: 'prog-prop0', fillEl: 'fill-prop0' },
+    { id: 'prop-phase1', count: 6, progEl: 'prog-prop1', fillEl: 'fill-prop1' },
+    { id: 'prop-phase2', count: 6, progEl: 'prog-prop2', fillEl: 'fill-prop2' },
+    { id: 'prop-phase3', count: 6, progEl: 'prog-prop3', fillEl: 'fill-prop3' },
+  ],
+  tm: [
+    { id: 'tm-phase0', count: 6, progEl: 'prog-tm0', fillEl: 'fill-tm0' },
+    { id: 'tm-phase1', count: 5, progEl: 'prog-tm1', fillEl: 'fill-tm1' },
+    { id: 'tm-phase2', count: 4, progEl: 'prog-tm2', fillEl: 'fill-tm2' },
+  ],
+};
+
+// ── Sync UI ──
+function setSyncStatus(s) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const map = {
+    saving:  { text: '● Saving…',              color: 'var(--warn)' },
+    saved:   { text: '✓ Synced to cloud',       color: 'var(--accent2)' },
+    error:   { text: '✕ Offline — saved locally', color: 'var(--accent3)' },
+    loading: { text: '◌ Loading…',              color: 'var(--muted)' },
+  };
+  const m = map[s] || map.saved;
+  el.textContent = m.text;
+  el.style.color = m.color;
+}
+
+// ── Load ──
+async function loadState() {
+  setSyncStatus('loading');
+  try {
+    const { data, error } = await sb.from('opc_tracker').select('checked_state').eq('tracker_id', TRACKER_ID).single();
+    if (data && data.checked_state) state = data.checked_state;
+    setSyncStatus('saved');
+  } catch(e) {
+    try { const s = localStorage.getItem(TRACKER_ID); if (s) state = JSON.parse(s); } catch(_) {}
+    setSyncStatus('error');
+  }
+  if (!state.steps) state.steps = {};
+  if (!state.tmStatuses) state.tmStatuses = {};
+  renderTmCards();
+  applyState();
+}
+
+// ── Save ──
+function saveState() {
+  try { localStorage.setItem(TRACKER_ID, JSON.stringify(state)); } catch(_) {}
+  clearTimeout(saveTimer);
+  setSyncStatus('saving');
+  saveTimer = setTimeout(async () => {
+    try {
+      const { error } = await sb.from('opc_tracker').upsert(
+        { tracker_id: TRACKER_ID, checked_state: state, updated_at: new Date().toISOString() },
+        { onConflict: 'tracker_id' }
+      );
+      setSyncStatus(error ? 'error' : 'saved');
+    } catch(e) { setSyncStatus('error'); }
+  }, 800);
+}
+
+// ── Apply State ──
+function applyState() {
+  document.querySelectorAll('.step').forEach(step => {
+    const id = step.dataset.id;
+    const chk = step.querySelector('.step-check');
+    if (state.steps[id]) {
+      step.classList.add('checked');
+      chk.textContent = '✓';
+    } else {
+      step.classList.remove('checked');
+      chk.textContent = '';
+    }
+  });
+  updateAllProgress();
+}
+
+// ── Toggle Step ──
+function toggleStep(el) {
+  const step = el.closest('.step');
+  const id = step.dataset.id;
+  const isChecked = step.classList.toggle('checked');
+  el.textContent = isChecked ? '✓' : '';
+  state.steps[id] = isChecked;
+  saveState();
+  updateAllProgress();
+}
+
+// ── Update Progress ──
+function updateAllProgress() {
+  ['opc', 'prop', 'tm'].forEach(section => {
+    let done = 0, total = 0;
+    PHASE_DEFS[section].forEach(def => {
+      const phaseEl = document.getElementById(def.id);
+      let phaseDone = phaseEl ? phaseEl.querySelectorAll('.step.checked').length : 0;
+      done += phaseDone;
+      total += def.count;
+      const fill = document.getElementById(def.fillEl);
+      const prog = document.getElementById(def.progEl);
+      if (fill) fill.style.width = (def.count ? Math.round(phaseDone / def.count * 100) : 0) + '%';
+      if (prog) prog.textContent = `${phaseDone}/${def.count}`;
+    });
+
+    if (section === 'tm') {
+      // blend step progress + card filing progress
+      const filedCount = TM_MARKS.filter(m => ['filed','registered'].includes(state.tmStatuses[m.id] || 'todo')).length;
+      const blended = Math.round(((done / (total || 1)) * 0.5 + (filedCount / TM_MARKS.length) * 0.5) * 100);
+      document.getElementById('tmPct').textContent = blended + '%';
+    } else {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById(section + 'Pct').textContent = pct + '%';
+    }
+  });
+}
+
+// ── TM Cards — built with click-to-cycle, NO hidden inputs ──
+function renderTmCards() {
+  const grid = document.getElementById('tmCardGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  TM_MARKS.forEach(mark => {
+    const status = state.tmStatuses[mark.id] || 'todo';
+    const card = document.createElement('div');
+    card.className = `tm-card ${CARD_CLASSES[status]}`;
+    card.id = `tmcard-${mark.id}`;
+    card.title = 'Click to cycle status';
+    card.addEventListener('click', () => cycleTmStatus(mark.id));
+
+    card.innerHTML = `
+      <div class="tm-card-top">
+        <div class="tm-card-name">${mark.name}</div>
+        <button class="tm-cycle-btn" title="Cycle status">${STATUS_ICONS[status]}</button>
+      </div>
+      <div class="tm-card-type">${mark.type}</div>
+      <div class="tm-card-class">${mark.classes}</div>
+      <div class="tm-card-fee">${mark.fee} MSME</div>
+      <span class="tm-card-status ${STATUS_CLASSES[status]}" id="tmstatus-${mark.id}">${STATUS_LABELS[status]}</span>
+    `;
+
+    // prevent button double-trigger since card also has click
+    card.querySelector('.tm-cycle-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      cycleTmStatus(mark.id);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function cycleTmStatus(markId) {
+  const current = state.tmStatuses[markId] || 'todo';
+  const idx = STATUS_CYCLE.indexOf(current);
+  const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  state.tmStatuses[markId] = next;
+
+  const card = document.getElementById(`tmcard-${markId}`);
+  if (card) {
+    card.className = `tm-card ${CARD_CLASSES[next]}`;
+    const statusEl = document.getElementById(`tmstatus-${markId}`);
+    if (statusEl) {
+      statusEl.className = `tm-card-status ${STATUS_CLASSES[next]}`;
+      statusEl.textContent = STATUS_LABELS[next];
+    }
+    const btn = card.querySelector('.tm-cycle-btn');
+    if (btn) btn.textContent = STATUS_ICONS[next];
+  }
+
+  saveState();
+  updateAllProgress();
+}
+
+// ── Tab Switch ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Toggle Phase ──
+function togglePhase(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Reset Section ──
+function resetSection(section) {
+  if (!confirm(`Reset all ${section.toUpperCase()} progress?`)) return;
+  const defs = PHASE_DEFS[section] || [];
+  defs.forEach(def => {
+    const phaseEl = document.getElementById(def.id);
+    if (phaseEl) {
+      phaseEl.querySelectorAll('.step').forEach(s => {
+        s.classList.remove('checked');
+        const chk = s.querySelector('.step-check');
+        if (chk) chk.textContent = '';
+        state.steps[s.dataset.id] = false;
+      });
+    }
+  });
+  if (section === 'tm') {
+    TM_MARKS.forEach(m => { state.tmStatuses[m.id] = 'todo'; });
+    renderTmCards();
+  }
+  saveState();
+  updateAllProgress();
+}
+
+// ── Init ──
+loadState();
+</script>
+</body>
+</html>
